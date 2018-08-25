@@ -1,0 +1,279 @@
+version: '3.6'
+services:
+
+#### FRONTENDS ####
+ #Organizer - Unified Home Server Web Interface
+  organizer:
+    image: "lsiocommunity/organizr"
+    container_name: organizr
+    hostname: organizr
+    network_mode: bridge
+    volumes:
+      - /PV/organizr/config:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - "VIRTUAL_HOST=systemprep.net,www.systemprep.net"
+    expose:
+      - 80
+
+ #Portainer - WebUI for Containers
+  portainer:
+    container_name: portainer
+    image: "portainer/portainer"
+    hostname: portainer
+    network_mode: bridge
+    expose:
+      - 9000
+    environment:
+      - VIRTUAL_HOST=docker.systemprep.net
+      - VIRTUAL_PORT=9000
+      - PGID=1000
+      - PUID=1000
+    volumes:
+      - /PV/portainer/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+
+######### DOCKER RELATED ##########
+
+# Watchtower - Automatic Update of Containers/Apps
+  watchtower:
+    container_name: watchtower
+    hostname: watchtower
+    restart: always
+    image: v2tec/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 4 * * *" --cleanup
+
+######### SMART HOME APPS ##########
+
+# Home Assistant - Smart Home Hub
+  homeassistant:
+    container_name: homeassistant
+    hostname: hass
+    network_mode: bridge
+    restart: always
+    image: homeassistant/home-assistant
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/ttyUSB1:/dev/ttyUSB1
+      - /dev/ttyACM0:/dev/ttyACM0
+    volumes:
+      - /PV/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /PV//shared:/shared
+    ports:
+      - "8123:8123"
+    privileged: true
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=EST5EDT
+
+##### Software Repositories #####
+
+ # Registry - Private Docker Image Registry
+  registry:
+    container_name: registry
+    image: "registry:2"
+    network_mode: bridge
+    ports: 
+      - "5000:5000"
+    volumes:
+      - /PV/registry/registry:/var/lib/registry
+
+ # Gogs - Private Git Repo
+  git:
+    container_name: gogs
+    image: "gogs/gogs"
+    network_mode: bridge
+    expose:
+      - 3000
+    volumes:
+      - /PV/git/data:/data
+    environment:
+      - PUID=1000
+      - GUID=1000
+      - TZ=EST5EDT
+      - VIRTUAL_HOST=git.systemprep.net
+      - VIRTUAL_PORT=3000
+
+##### Downloading Software ####
+
+ # Sabnzbd - Usenet Downloader
+  sabnzbd:
+    image: "linuxserver/sabnzbd"
+    network_mode: bridge
+    container_name: sabnzbd
+    volumes:
+      - /PV/shared/tv:/tv
+      - /PV/shared/movies:/movies
+#      - /PV/sabnzbd/downloads:/downloads
+#      - /PV/sabnzbd/incomplete-downloads:/incomplete-downloads
+      - /sabnzbd/downloads:/downloads
+      - /sabnzbd/incomplete-downloads:/incomplete-downloads
+      - /PV/shared/comics:/comics
+      - /PV/sabnzbd/config:/config
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - PUID=1000
+      - PGID=1000
+
+##### Move and TV Monitoring #####
+
+ # Sonarr - TV Show Download and Management
+  sonarr:
+    image: "linuxserver/sonarr"
+    network_mode: bridge
+    container_name: sonarr
+    volumes:
+      - /PV/shared/tv:/tv
+      - /PV/sonarr/downloads:/downloads
+      - /etc/localtime:/etc/localtime
+      - /PV/sonarr/config:/config
+    ports:
+      - "8989:8989"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=EST5EDT
+
+ # Radarr - Movie Download and Management
+  radarr:
+    image: "linuxserver/radarr"
+    container_name: radarr
+    network_mode: bridge
+    volumes:
+      - /PV/shared/movies:/movies
+      - /PV/sabnzbd/downloads:/downloads
+      - /etc/localtime:/etc/localtime
+      - /PV/radarr/config:/config
+    ports:
+      - "7878:7878"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=EST5EDT
+
+ # Mylar - Comics Download and Management
+  mylar:
+    container_name: mylar
+    network_mode: bridge
+    image: "linuxserver/mylar"
+    volumes: 
+      - /PV/mylar/config:/config
+      - /sabnzbd/downloads:/downloads
+      - /PV/shared/comics:/comics
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=EST5EDT
+      - LANG=en_US.UTF-8
+      - LANGUAGE=en_US:en
+      - LC_ALL=en_US.UTF-8
+    ports:
+      - "8090:8090"
+
+##### Media Server Apps #####
+
+ # Plexpy/Tautulli - Monitoring Plex Usage
+  plexpy:
+    image: "linuxserver/plexpy"
+    network_mode: bridge
+    container_name: plexpy
+    volumes:
+      - /PV/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs
+      - /PV/plexpy/config:/config
+    ports:
+      - "8181:8181"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=EST5EDT
+
+ # Calibre Web - Book Library Access
+  books:
+    container_name: calibre_web
+    image: "technosoft2000/calibre-web"
+    network_mode: bridge
+    expose:
+      - 8083
+    volumes:
+      - /PV/shared/books:/books
+      - /PV/calibre_web/config:/calibre-web/config
+    environment:
+      - USE_CONFIG_DIR=true
+      - APP_REPO=https://github.com/janeczku/calibre-web.git
+      - APP_BRANCH=master
+      - SET_CONTAINER_TIMEZONE=true
+      - CONTAINER_TIMEZONE=EST5EDT
+      - PGID=1000
+      - PUID=1000
+      - VIRTUAL_HOST=books.systemprep.net
+      - VIRTUAL_PORT=8083
+
+ # PLEX - HTMC System 
+  plex:
+    container_name: plex
+    image: "plexinc/pms-docker"
+    network_mode: host
+    volumes:
+      - /PV/plex/config:/config
+      - /PV/shared/tv:/data/tvshows
+      - /PV/shared/movies:/data/movies
+      - /PV/plex/transcode:/transcode
+    environment:
+      - PUID=1000
+      - GUID=1000
+      - TZ=EST5EDT
+      - PLEX_CLAIM=claim-9Yz6dNqDtmUdYC4XAu9u
+
+##### Server Access Points #####
+
+ # NGINX Proxy - Reverse Proxy to Expose Containers as Subdomains on 80/443
+  proxy:
+    container_name: proxy
+    image: jwilder/nginx-proxy
+    network_mode: bridge
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+
+ # OpenVPN-AS - VPN Server for Secure Network Access
+  vpn:
+    container_name: openvpn
+    image: "linuxserver/openvpn-as"
+    network_mode: host
+    restart: always
+    privileged: true
+    environment:
+    - PGID=1000
+    - UGID=1000
+    - TZ=EST5EDT
+    - INTERFACE=enp1s0
+    volumes:
+      - /PV/openvpn/config:/config
+
+##### File Management #####
+
+ # NextCloud - Private Cloud Storage Server
+  nextcloud:
+    container_name: nextcloud
+    image: "linuxserver/nextcloud"
+    network_mode: bridge
+    ports:
+      - "443:443"
+    expose: 
+      - 443
+    volumes:
+      - /PV/shared/data:/data
+      - /PV/nextcloud/config:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - "VIRTUAL_HOST=nextcloud.systemprep.net"
+      - "VIRTUAL_PORT=443"
