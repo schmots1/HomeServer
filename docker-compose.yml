@@ -229,7 +229,7 @@ services:
       - PUID=1000
       - GUID=1000
       - TZ=EST5EDT
-      - PLEX_CLAIM=claim-9Yz6dNqDtmUdYC4XAu9u
+      - PLEX_CLAIM={{ your claim }}
 
 ##### Server Access Points #####
 
