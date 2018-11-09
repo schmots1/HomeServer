@@ -99,6 +99,27 @@ services:
       - VIRTUAL_HOST=git.systemprep.net
       - VIRTUAL_PORT=3000
 
+##### CI/CD #####
+
+ # Jenkins - CI/CD pipeline
+  jenkins:
+    image: "jenkins/jenkins:lts"
+    network_mode: bridge
+    container_name: jenkins
+    command: wget https://get.docker.com
+    command: sh index.html
+    command: usermod -aG docker jenkins
+    volumes:
+      - /PV/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    expose:
+      - 8080
+    environment:
+      - VIRTUAL_HOST=jenkins.systemprep.net
+      - VIRTUAL_PORT=8080
+    ports:
+      - 50000:50000
+
 ##### Downloading Software ####
 
  # Sabnzbd - Usenet Downloader
@@ -178,6 +199,23 @@ services:
       - "8090:8090"
 
 ##### Media Server Apps #####
+
+ # Ubooquity - Web Based Comic Reader
+  ubooquity:
+    image: linuxserver/ubooquity
+    network_mode: bridge
+    container_name: ubooquity
+    volumes:
+      - /PV/ubooquity/config:/config
+      - /PV/ubooquity/books:/books
+      - /PV/shared/comics:/comics
+      - /PV/ubooquity/files:/files
+    environment:
+      - PGID=1000
+      - PUID=1000
+    ports:
+      - 2202:2202
+      - 2203:2203
 
  # Plexpy/Tautulli - Monitoring Plex Usage
   plexpy:
