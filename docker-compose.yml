@@ -13,7 +13,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - "VIRTUAL_HOST=systemprep.net,www.systemprep.net"
+      - "VIRTUAL_HOST=tld.com,www.tld.com"
     expose:
       - 80
 
@@ -26,7 +26,7 @@ services:
     expose:
       - 9000
     environment:
-      - VIRTUAL_HOST=docker.systemprep.net
+      - VIRTUAL_HOST=docker.tld.com
       - VIRTUAL_PORT=9000
       - PGID=1000
       - PUID=1000
@@ -96,7 +96,7 @@ services:
       - PUID=1000
       - GUID=1000
       - TZ=EST5EDT
-      - VIRTUAL_HOST=git.systemprep.net
+      - VIRTUAL_HOST=git.tld.com
       - VIRTUAL_PORT=3000
 
 ##### CI/CD #####
@@ -250,7 +250,7 @@ services:
       - CONTAINER_TIMEZONE=EST5EDT
       - PGID=1000
       - PUID=1000
-      - VIRTUAL_HOST=books.systemprep.net
+      - VIRTUAL_HOST=books.tld.com
       - VIRTUAL_PORT=8083
 
  # PLEX - HTMC System 
@@ -267,7 +267,7 @@ services:
       - PUID=1000
       - GUID=1000
       - TZ=EST5EDT
-      - PLEX_CLAIM=claim-9Yz6dNqDtmUdYC4XAu9u
+      - PLEX_CLAIM={{ your claim }}
 
 ##### Server Access Points #####
 
@@ -313,5 +313,5 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - "VIRTUAL_HOST=nextcloud.systemprep.net"
+      - "VIRTUAL_HOST=nextcloud.tld.com"
       - "VIRTUAL_PORT=443"
